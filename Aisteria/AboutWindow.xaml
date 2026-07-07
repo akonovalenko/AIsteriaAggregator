@@ -1,0 +1,31 @@
+<Window x:Class="Aisteria.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About AIsteria Aggregator"
+        Icon="app.ico"
+        SizeToContent="WidthAndHeight"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <StackPanel Margin="24,20,24,16" MinWidth="320">
+        <TextBlock x:Name="lblProduct" FontSize="18" FontWeight="Bold"/>
+        <TextBlock x:Name="lblVersion" Margin="0,6,0,0" Foreground="#444"/>
+
+        <TextBlock Margin="0,14,0,0">
+            <Run Text="Author: "/><Run x:Name="runAuthor"/>
+        </TextBlock>
+        <TextBlock Margin="0,4,0,0">
+            <Run Text="E-mail: "/>
+            <Hyperlink x:Name="lnkEmail" Click="lnkEmail_Click"><Run x:Name="runEmail"/></Hyperlink>
+        </TextBlock>
+
+        <TextBlock x:Name="lblCopyright" Margin="0,14,0,0" Foreground="Gray"/>
+
+        <TextBlock Margin="0,8,0,0" FontSize="11" Foreground="Gray">
+            <Hyperlink x:Name="lnkSponsor" Click="lnkSponsor_Click" Foreground="Gray">Sponsor this project</Hyperlink>
+        </TextBlock>
+
+        <Button Content="OK" Width="88" Height="28" Margin="0,20,0,0"
+                HorizontalAlignment="Right" IsDefault="True" IsCancel="True" Click="btnOk_Click"/>
+    </StackPanel>
+</Window>

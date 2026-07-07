@@ -1,0 +1,236 @@
+<Window x:Class="Aisteria.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Aisteria"
+        Title="AIsteria Aggregator" Height="720" Width="1040"
+        Icon="app.ico"
+        WindowStartupLocation="CenterScreen"
+        AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop"
+        PreviewKeyDown="Window_PreviewKeyDown">
+    <Window.Resources>
+        <ItemsPanelTemplate x:Key="stackPanelTemplate">
+            <StackPanel Orientation="Vertical"/>
+        </ItemsPanelTemplate>
+        <ItemsPanelTemplate x:Key="wrapPanelTemplate">
+            <WrapPanel Orientation="Horizontal"/>
+        </ItemsPanelTemplate>
+    </Window.Resources>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Ask" Click="menuAsk_Click" InputGestureText="F5"/>
+                <MenuItem Header="Save _results…" Click="menuSaveResults_Click" InputGestureText="Ctrl+Shift+S"/>
+                <MenuItem Header="Save s_ummary…" Click="menuSaveSummary_Click"/>
+                <Separator/>
+                <MenuItem Header="Save sess_ion" Click="menuSaveSession_Click"/>
+                <MenuItem Header="Sessi_ons…" Click="menuSessions_Click"/>
+                <Separator/>
+                <MenuItem Header="_Settings…" Click="menuSettings_Click" InputGestureText="Ctrl+S"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Click="menuExit_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="Copy _all to clipboard" Click="menuCopyAll_Click"/>
+                <Separator/>
+                <MenuItem Header="_Clear results" Click="menuClear_Click" InputGestureText="Ctrl+L"/>
+                <MenuItem Header="Clear s_ummary" Click="menuClearSummary_Click"/>
+                <MenuItem Header="Clear _history" Click="menuClearHistory_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Image">
+                <MenuItem Header="_Load from file…" Click="menuLoadImage_Click" InputGestureText="Ctrl+O"/>
+                <MenuItem Header="_Paste from clipboard" Click="menuPasteImage_Click" InputGestureText="Ctrl+Shift+V"/>
+                <MenuItem Header="Load from _URL…" Click="menuUrlImage_Click"/>
+                <MenuItem Header="C_lear image(s)" Click="menuClearImage_Click"/>
+            </MenuItem>
+            <MenuItem x:Name="menuTemplates" Header="_Templates"/>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_Help" Click="menuHelp_Click" InputGestureText="F1"/>
+                <Separator/>
+                <MenuItem Header="_About…" Click="menuAbout_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <Grid Margin="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220" MinWidth="140"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- History -->
+            <DockPanel Grid.Column="0">
+                <TextBlock DockPanel.Dock="Top" Text="History" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Button DockPanel.Dock="Bottom" x:Name="btnDeleteHistory" Content="Delete" Click="btnDeleteHistory_Click" Margin="0,4,0,0" HorizontalAlignment="Left"/>
+                <ListBox x:Name="lstHistory" IsSynchronizedWithCurrentItem="False" SelectionChanged="lstHistory_SelectionChanged"/>
+            </DockPanel>
+
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="#EEE"/>
+
+            <!-- Main area -->
+            <Grid Grid.Column="2" Margin="8,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Input (tabbed) + actions -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TabControl x:Name="tabInput" Grid.Column="0" Height="126" Margin="0,0,0,10">
+                        <!-- Tab 1: plain text question -->
+                        <TabItem Header="Text">
+                            <TextBox x:Name="txtPrompt" Height="78" VerticalAlignment="Top" Margin="4"
+                                     AcceptsReturn="True" TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"
+                                     PreviewKeyDown="txtPrompt_PreviewKeyDown"/>
+                        </TabItem>
+
+                        <!-- Tab 2: image (left) + buttons (middle) + clarifying question (right) -->
+                        <TabItem Header="Image">
+                            <Grid Margin="4,0,4,0" Height="88">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- image preview + status -->
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <Border BorderBrush="#DDD" BorderThickness="1" Width="120" Height="62"
+                                            Background="Transparent" Cursor="Hand"
+                                            MouseLeftButtonUp="picImage_MouseLeftButtonUp"
+                                            ToolTip="Click to enlarge">
+                                        <Image x:Name="picImage" Stretch="Uniform" Margin="0,0,0,2"/>
+                                    </Border>
+                                    <TextBlock x:Name="lblImageStatus" Text="No image" Foreground="Gray"
+                                               FontSize="11" Width="120" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+
+                                <!-- buttons column (fixed-width panel; buttons stretch to it, so all equal) -->
+                                <StackPanel Grid.Column="1" Width="112" Margin="12,0,0,0" VerticalAlignment="Center">
+                                    <Button x:Name="btnLoadImage" Content="Load image" Click="btnLoadImage_Click" Margin="0,0,0,4"/>
+                                    <Button x:Name="btnPasteImage" Content="Paste" Click="btnPasteImage_Click" Margin="0,0,0,4"/>
+                                    <Button x:Name="btnClearImage" Content="Clear" Click="btnClearImage_Click" IsEnabled="False" Margin="0,0,0,4"/>
+                                </StackPanel>
+
+                                <!-- clarifying question -->
+                                <TextBox x:Name="txtImagePrompt" Grid.Column="2" Height="78" VerticalAlignment="Center" Margin="12,0,2,0"
+                                         AcceptsReturn="True" TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         PreviewKeyDown="txtPrompt_PreviewKeyDown"
+                                         ToolTip="Optional question about the image"/>
+                            </Grid>
+                        </TabItem>
+
+                        <!-- Tab 3: enable / disable providers -->
+                        <TabItem Header="Providers">
+                            <DockPanel>
+                                <Button x:Name="btnSettings" DockPanel.Dock="Bottom" Content="Settings…"
+                                        Click="btnSettings_Click" HorizontalAlignment="Right" MinWidth="90" Margin="0,4,4,0"/>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl x:Name="lstProviderToggles" Margin="6,2">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Vertical" MaxHeight="70"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <CheckBox Content="{Binding Label}" IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                                          IsEnabled="{Binding CanToggle}" Margin="4,2" Width="150"
+                                                          ToolTip="{Binding ToolTip}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </DockPanel>
+                        </TabItem>
+                    </TabControl>
+
+                    <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
+                        <Button x:Name="btnAsk" Content="Ask" Click="btnAsk_Click" MinWidth="90" Height="48" Margin="0,0,0,6"/>
+                        <ProgressBar x:Name="progressBar" Height="6" IsIndeterminate="True" Visibility="Collapsed"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Results + Summary -->
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="180" MinHeight="60"/>
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,4">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button x:Name="btnToggleLayout" Content="Side-by-side" Click="btnToggleLayout_Click"
+                                    Padding="10,1" Margin="0,0,6,0" ToolTip="Toggle stacked / side-by-side layout"/>
+                            <Button x:Name="btnCopyAll" Content="Copy all" Click="btnCopyAll_Click"
+                                    Padding="10,1" Margin="0,0,6,0" ToolTip="Copy all results to the clipboard"/>
+                            <Button x:Name="btnSaveResults" Content="Save…" Click="btnSaveResults_Click"
+                                    Padding="10,1" Margin="0,0,6,0" ToolTip="Save results to a text / Markdown / HTML file"/>
+                            <Button x:Name="btnClearResults" Content="Clear" Click="btnClearResults_Click"
+                                    Padding="10,1" ToolTip="Clear the results"/>
+                        </StackPanel>
+                        <TextBlock Text="Results" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </DockPanel>
+
+                    <ScrollViewer x:Name="scrollRuns" Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl x:Name="lstRuns" ItemsPanel="{StaticResource stackPanelTemplate}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="{Binding Tag, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            HorizontalAlignment="Stretch" Margin="0,0,8,8" Padding="8"
+                                            BorderBrush="#DDD" BorderThickness="1" CornerRadius="6" Background="#FCFCFD">
+                                        <DockPanel>
+                                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,4">
+                                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding MetaText}" Foreground="Gray" FontSize="11"
+                                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <Button Content="Copy" Padding="7,0" Margin="0,0,4,0"
+                                                            Click="btnCopyRun_Click" Tag="{Binding}"/>
+                                                    <Button Content="Retry" Padding="7,0"
+                                                            Click="btnRetryRun_Click" Tag="{Binding}"/>
+                                                </StackPanel>
+                                                <TextBlock Foreground="{Binding HeaderBrush}" FontWeight="Bold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                                    <Run Text="{Binding Name, Mode=OneWay}"/><Run Text="   "/><Run Text="{Binding StatusText, Mode=OneWay}" FontWeight="Normal" FontSize="11"/>
+                                                </TextBlock>
+                                            </DockPanel>
+                                            <RichTextBox local:MarkdownBehavior.Markdown="{Binding Text}"
+                                                         IsReadOnly="True" IsDocumentEnabled="True"
+                                                         BorderThickness="0" Background="Transparent" Padding="0" IsTabStop="False"
+                                                         MaxHeight="360" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"
+                                  ResizeBehavior="PreviousAndNext" ResizeDirection="Rows" Background="#EEE"/>
+
+                    <DockPanel Grid.Row="3">
+                        <DockPanel DockPanel.Dock="Top" Margin="0,4,0,4">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button x:Name="btnSaveSummary" Content="Save…" Click="btnSaveSummary_Click"
+                                        Padding="10,1" Margin="0,0,6,0" ToolTip="Save the summary to a text file"/>
+                                <Button x:Name="btnClearSummary" Content="Clear" Click="btnClearSummary_Click"
+                                        Padding="10,1" ToolTip="Clear the summary"/>
+                            </StackPanel>
+                            <TextBlock Text="Summary (Ollama synthesis)" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <TextBox x:Name="txtFinal" IsReadOnly="True" TextWrapping="Wrap"
+                                 AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+                    </DockPanel>
+                </Grid>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>

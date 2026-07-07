@@ -1,0 +1,83 @@
+<Window x:Class="Aisteria.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings" Height="640" Width="720" Icon="app.ico"
+        WindowStartupLocation="CenterOwner">
+    <DockPanel Margin="10">
+        <!-- Bottom buttons -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Import…" Click="btnImportKeys_Click"/>
+            <Button Content="Export…" Click="btnExportKeys_Click"/>
+            <Button Content="Save" Click="btnSave_Click" MinWidth="90"/>
+            <Button Content="Cancel" IsCancel="True" MinWidth="90"/>
+        </StackPanel>
+
+        <TabControl>
+            <TabItem Header="Providers &amp; Keys">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="pnlProviders" Margin="4"/>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Ollama (local)">
+                <Grid Margin="6">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+                        <CheckBox x:Name="chkOllama" Content="Enabled" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Server URL:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBox x:Name="txtOllamaUrl" Width="360" VerticalAlignment="Center"/>
+                        <Button Content="Test" Click="btnTestOllama_Click" Margin="8,0,0,0"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="1" x:Name="lblOllamaStatus" Text="" Margin="0,0,0,6"/>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="Synthesis model:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <ComboBox x:Name="cmbOllamaModel" Width="280" IsEditable="True"/>
+                    </StackPanel>
+
+                    <ListView Grid.Row="3" x:Name="lvwModels" SelectionChanged="lvwModels_SelectionChanged">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Model" Width="240" DisplayMemberBinding="{Binding Name}"/>
+                                <GridViewColumn Header="Size" Width="90" DisplayMemberBinding="{Binding Size}"/>
+                                <GridViewColumn Header="Params" Width="90" DisplayMemberBinding="{Binding Params}"/>
+                                <GridViewColumn Header="Modified" Width="150" DisplayMemberBinding="{Binding Modified}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                    <TextBlock Grid.Row="4" Margin="0,6,0,0" Foreground="Gray"
+                               Text="Ollama must be running locally for synthesis. Click Test to detect installed models."/>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Generation">
+                <StackPanel Margin="12">
+                    <TextBlock Text="These apply to every provider. Leave a field empty to use each provider's default."
+                               Foreground="Gray" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="Temperature:" Width="110" VerticalAlignment="Center"/>
+                        <TextBox x:Name="txtTemperature" Width="80"/>
+                        <TextBlock Text="   0–2 (empty = provider default)" Foreground="Gray" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Max tokens:" Width="110" VerticalAlignment="Center"/>
+                        <TextBox x:Name="txtMaxTokens" Width="80"/>
+                        <TextBlock Text="   empty = provider default" Foreground="Gray" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    </StackPanel>
+                    <TextBlock Text="Extra system prompt (added to every request, after the language rule):" Margin="0,2,0,4"/>
+                    <TextBox x:Name="txtSystemPrompt" Height="140" AcceptsReturn="True" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"/>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>
