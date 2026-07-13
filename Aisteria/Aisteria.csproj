@@ -2,8 +2,10 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net6.0-windows;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net6.0-windows;net9.0-windows;net10.0-windows</TargetFrameworks>
     <UseWPF>true</UseWPF>
+    <!-- Allow a net6 framework-dependent build to run on newer major runtimes (e.g., .NET 10) -->
+    <RollForward>LatestMajor</RollForward>
     <Nullable>disable</Nullable>
     <AssemblyName>AIsteriaAggregator</AssemblyName>
     <RootNamespace>Aisteria</RootNamespace>
