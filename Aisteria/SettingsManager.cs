@@ -64,6 +64,14 @@ namespace Aisteria.Models
             return string.IsNullOrEmpty(value) || value.Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
+        // Load a boolean flag with an explicit default when the setting was never written.
+        public static bool LoadFlag(string name, bool defaultValue)
+        {
+            var value = Get(name);
+            if (string.IsNullOrEmpty(value)) return defaultValue;
+            return value.Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static void SaveEnabled(string name, bool value) => Set(name, value ? "true" : "false");
 
         // ── Store (read user file first, fall back to App.config) ──────

@@ -78,6 +78,27 @@ namespace Aisteria
             RebuildTemplatesMenu();
         }
 
+        private void menuViewLogs_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var latest = Logger.Instance.GetLatestLog();
+                if (string.IsNullOrEmpty(latest))
+                {
+                    var dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Aisteria", "logs");
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", dir) { UseShellExecute = true });
+                }
+                else
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(latest) { UseShellExecute = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to open log: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         // ── Prompt templates ──────────────────────────────────────────
 
         private List<PromptTemplate> _templates = new List<PromptTemplate>();
@@ -368,9 +389,37 @@ namespace Aisteria
                 var resp = await run.Provider.AskAsync(prompt, images, ct);
                 sw.Stop();
                 run.ElapsedMs   = sw.Elapsed.TotalMilliseconds;
-                run.Text        = resp.Text;
                 run.TotalTokens = resp.TotalTokens;
                 run.Status      = resp.IsError ? RunStatus.Error : RunStatus.Ok;
+
+                if (resp.IsError)
+                {
+                    // Log full diagnostics for all providers and show a short message in the UI
+                    try
+                    {
+                        var details = new System.Text.StringBuilder();
+                        details.AppendLine($"Provider: {run.Provider.Name} ({run.Provider.GetType().FullName})");
+                        details.AppendLine($"Timestamp: {DateTime.UtcNow:O} UTC");
+                        details.AppendLine($"Prompt: {prompt}");
+                        details.AppendLine($"Images: {(images == null ? 0 : images.Count)}");
+                        details.AppendLine("--- Response ---");
+                        details.AppendLine(resp.Text ?? string.Empty);
+                        var logPath = Logger.Instance.Log(details.ToString());
+
+                        var shortMsg = string.IsNullOrWhiteSpace(resp.Text) ? "(no details)" : resp.Text;
+                        if (shortMsg.Length > Constants.UiTruncateLength) shortMsg = shortMsg.Substring(0, Constants.UiTruncateLength) + "…";
+                        shortMsg += $"\n\nFull diagnostics: {logPath}";
+                        run.Text = shortMsg;
+                    }
+                    catch
+                    {
+                        run.Text = resp.Text;
+                    }
+                }
+                else
+                {
+                    run.Text = resp.Text;
+                }
             }
             catch (OperationCanceledException)
             {

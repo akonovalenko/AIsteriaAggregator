@@ -63,7 +63,14 @@ namespace Aisteria.Providers
                 var json = await response.Content.ReadAsStringAsync(ct);
 
                 if (!response.IsSuccessStatusCode)
+                {
+                    try
+                    {
+                        Logger.Instance.LogRequestResponse(this, null, response, json);
+                    }
+                    catch { }
                     return AiResponse.Fail($"Error {(int)response.StatusCode}: {json}");
+                }
 
                 using var doc = JsonDocument.Parse(json);
                 if (!doc.RootElement.TryGetProperty("response", out var result))

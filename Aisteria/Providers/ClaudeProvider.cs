@@ -74,7 +74,10 @@ namespace Aisteria.Providers
                 var json = await response.Content.ReadAsStringAsync(timeoutCts.Token);
 
                 if (!response.IsSuccessStatusCode)
+                {
+                    Logger.Instance.LogRequestResponse(this, req, response, json);
                     return AiResponse.Fail(Http.ErrorMessage(json, (int)response.StatusCode));
+                }
 
                 JsonDocument doc;
                 try { doc = JsonDocument.Parse(json); }

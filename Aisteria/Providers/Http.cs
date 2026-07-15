@@ -46,7 +46,7 @@ namespace Aisteria.Providers
             }
 
             var body = json ?? string.Empty;
-            if (body.Length > 500) body = body.Substring(0, 500) + "…";
+            if (body.Length > Aisteria.Constants.UiTruncateLength) body = body.Substring(0, Aisteria.Constants.UiTruncateLength) + "…";
             return $"Error: HTTP {statusCode}: {body}";
         }
 

@@ -10,32 +10,32 @@ namespace Aisteria.Providers
 {
     public abstract class OpenAICompatibleProvider : IAIProvider
     {
-        private readonly string _apiKey;
-        private readonly string _baseUrl;
-        private readonly string _model;
-        private readonly string _visionModel;
+        protected string ApiKey { get; }
+        protected string BaseUrl { get; }
+        protected string Model { get; }
+        protected string VisionModel { get; }
 
         public abstract string Name { get; }
-        public bool SupportsImages => _visionModel != null;
+        public bool SupportsImages => VisionModel != null;
 
         /// <summary>Optional user override for the text model (empty = built-in default).</summary>
         public string ModelOverride { get; set; }
 
         protected OpenAICompatibleProvider(string baseUrl, string model, string apiKey, string visionModel = null)
         {
-            _baseUrl     = baseUrl;
-            _model       = model;
-            _apiKey      = apiKey;
-            _visionModel = visionModel;
+            BaseUrl = baseUrl ?? string.Empty;
+            Model = model ?? string.Empty;
+            ApiKey = apiKey ?? string.Empty;
+            VisionModel = visionModel;
         }
 
         public async Task<AiResponse> AskAsync(string prompt, IReadOnlyList<ImageInput> images = null, CancellationToken ct = default)
         {
-            if (string.IsNullOrEmpty(_apiKey)) return AiResponse.Fail("API key not set");
+            if (string.IsNullOrEmpty(ApiKey)) return AiResponse.Fail("API key not set");
 
-            bool   useImages = images != null && images.Count > 0 && _visionModel != null;
-            string textModel = string.IsNullOrWhiteSpace(ModelOverride) ? _model : ModelOverride.Trim();
-            string activeModel = useImages ? _visionModel : textModel;
+            bool   useImages = images != null && images.Count > 0 && VisionModel != null;
+            string textModel = string.IsNullOrWhiteSpace(ModelOverride) ? Model : ModelOverride.Trim();
+            string activeModel = useImages ? VisionModel : textModel;
 
             object[] messages;
             if (useImages)
@@ -69,18 +69,25 @@ namespace Aisteria.Providers
 
             try
             {
-                using var req = new HttpRequestMessage(HttpMethod.Post, _baseUrl.TrimEnd('/') + "/chat/completions")
+                using var req = new HttpRequestMessage(HttpMethod.Post, BaseUrl.TrimEnd('/') + "/chat/completions")
                 {
                     Content = new StringContent(bodyJson, Encoding.UTF8, "application/json")
                 };
                 // Per-request header (shared client → do not use DefaultRequestHeaders)
-                req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {_apiKey}");
+                req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {ApiKey}");
 
                 using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 timeoutCts.CancelAfter(TimeSpan.FromSeconds(100));
 
                 var response = await Http.Client.SendAsync(req, timeoutCts.Token);
                 var json = await response.Content.ReadAsStringAsync(timeoutCts.Token);
+
+                // If verbose logging enabled, record request/response details (mask auth)
+                try
+                {
+                    Logger.Instance.LogRequestResponse(this, req, response, json);
+                }
+                catch { }
 
                 if (!response.IsSuccessStatusCode)
                     return AiResponse.Fail(Http.ErrorMessage(json, (int)response.StatusCode));

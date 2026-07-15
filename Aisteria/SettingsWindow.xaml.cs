@@ -27,11 +27,15 @@ namespace Aisteria
             public string UrlName;        // App.config key for the base URL
             public string DefaultUrl;
             public string ModelKey;       // config key for the model override (null = no override box)
+            public string HeaderKey;      // config key for the auth header name (optional)
+            public string DefaultHeader;  // default header name (e.g. Authorization or x-api-key)
 
             public CheckBox Chk;
             public TextBox  Key;
             public TextBox  Url;
             public TextBox  Model;
+            public TextBox  Header;
+            public CheckBox VerboseChk;
         }
 
         public SettingsWindow(Settings settings)
@@ -86,6 +90,8 @@ namespace Aisteria
                 grid.RowDefinitions.Add(new RowDefinition());
                 grid.RowDefinitions.Add(new RowDefinition());
                 if (d.ModelKey != null) grid.RowDefinitions.Add(new RowDefinition());
+                // additional row for verbose checkbox
+                if (d.ModelKey != null) grid.RowDefinitions.Add(new RowDefinition());
 
                 d.Chk = new CheckBox { Content = "Enabled", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 4), IsChecked = GetBool(settings, d.EnabledProp) };
                 Grid.SetRow(d.Chk, 0); Grid.SetColumn(d.Chk, 0);
@@ -114,6 +120,19 @@ namespace Aisteria
 
                     grid.Children.Add(modelLabel);
                     grid.Children.Add(d.Model);
+                }
+
+                // Verbose logging checkbox (per-provider)
+                if (d.ModelKey != null)
+                {
+                    int verboseRow = 3;
+                    var verbLabel = new TextBlock { Text = "Verbose logs", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 4, 10, 0), Foreground = Brushes.Gray };
+                    Grid.SetRow(verbLabel, verboseRow); Grid.SetColumn(verbLabel, 0);
+
+                    d.VerboseChk = new CheckBox { IsChecked = SettingsManager.LoadFlag(d.KeyProp.Replace("Key", "Verbose"), false), VerticalAlignment = VerticalAlignment.Center };
+                    Grid.SetRow(d.VerboseChk, verboseRow); Grid.SetColumn(d.VerboseChk, 1);
+                    grid.Children.Add(verbLabel);
+                    grid.Children.Add(d.VerboseChk);
                 }
 
                 box.Content = grid;
@@ -253,6 +272,8 @@ namespace Aisteria
                 SettingsManager.SaveUrl(d.UrlName, d.Url.Text);
                 if (d.ModelKey != null)
                     SettingsManager.SaveUrl(d.ModelKey, (d.Model.Text ?? "").Trim());
+                if (d.ModelKey != null && d.VerboseChk != null)
+                    SettingsManager.SaveEnabled(d.KeyProp.Replace("Key", "Verbose"), d.VerboseChk.IsChecked == true);
 
                 SetStr(updated, d.KeyProp, d.Key.Text);
                 SetBool(updated, d.EnabledProp, d.Chk.IsChecked == true);
