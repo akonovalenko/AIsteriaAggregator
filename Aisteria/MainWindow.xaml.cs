@@ -1043,54 +1043,50 @@ namespace Aisteria
         {
             ApplyGenerationOptions();
             providers = new List<IAIProvider>();
-
-            var openAIUrl     = SettingsManager.LoadUrl("OpenAIBaseUrl",     "https://api.openai.com/v1");
-            var geminiUrl     = SettingsManager.LoadUrl("GeminiUrl",         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent");
-            var groqUrl       = SettingsManager.LoadUrl("GroqBaseUrl",       "https://api.groq.com/openai/v1");
-            var deepSeekUrl   = SettingsManager.LoadUrl("DeepSeekBaseUrl",   "https://api.deepseek.com/v1");
-            var mistralUrl    = SettingsManager.LoadUrl("MistralBaseUrl",    "https://api.mistral.ai/v1");
-            var openRouterUrl = SettingsManager.LoadUrl("OpenRouterBaseUrl", "https://openrouter.ai/api/v1");
+            var settingProvider = SettingsManager.LoadProviders();
 
             if (!string.IsNullOrWhiteSpace(settings.OpenAIKey) && settings.OpenAIEnabled)
-                providers.Add(new OpenAIProvider(openAIUrl, settings.OpenAIKey) { ModelOverride = SettingsManager.LoadUrl("OpenAIModel", "") });
+                providers.Add(new OpenAIProvider(settingProvider["openAIUrl"], settings.OpenAIKey) { ModelOverride = SettingsManager.LoadUrl("OpenAIModel", "") });
 
             if (!string.IsNullOrWhiteSpace(settings.GeminiKey) && settings.GeminiEnabled)
-                providers.Add(new GeminiProvider(geminiUrl, settings.GeminiKey));
+                providers.Add(new GeminiProvider(settingProvider["geminiUrl"], settings.GeminiKey));
 
             if (!string.IsNullOrWhiteSpace(settings.OllamaUrl) && settings.OllamaEnabled)
-                providers.Add(new OllamaProvider(settings.OllamaUrl, settings.OllamaModel));
+                providers.Add(new OllamaProvider(settingProvider["ollamaUrl"], settings.OllamaModel));
 
             if (!string.IsNullOrWhiteSpace(settings.GroqKey) && settings.GroqEnabled)
-                providers.Add(new GroqProvider(groqUrl, settings.GroqKey) { ModelOverride = SettingsManager.LoadUrl("GroqModel", "") });
+                providers.Add(new GroqProvider(settingProvider["groqUrl"], settings.GroqKey) { ModelOverride = SettingsManager.LoadUrl("GroqModel", "") });
 
             if (!string.IsNullOrWhiteSpace(settings.DeepSeekKey) && settings.DeepSeekEnabled)
-                providers.Add(new DeepSeekProvider(deepSeekUrl, settings.DeepSeekKey) { ModelOverride = SettingsManager.LoadUrl("DeepSeekModel", "") });
+                providers.Add(new DeepSeekProvider(settingProvider["deepSeekUrl"], settings.DeepSeekKey) { ModelOverride = SettingsManager.LoadUrl("DeepSeekModel", "") });
 
             if (!string.IsNullOrWhiteSpace(settings.MistralKey) && settings.MistralEnabled)
-                providers.Add(new MistralProvider(mistralUrl, settings.MistralKey) { ModelOverride = SettingsManager.LoadUrl("MistralModel", "") });
+                providers.Add(new MistralProvider(settingProvider["mistralUrl"], settings.MistralKey) { ModelOverride = SettingsManager.LoadUrl("MistralModel", "") });
 
             if (!string.IsNullOrWhiteSpace(settings.OpenRouterKey) && settings.OpenRouterEnabled)
-                providers.Add(new OpenRouterProvider(openRouterUrl, settings.OpenRouterKey) { ModelOverride = SettingsManager.LoadUrl("OpenRouterModel", "") });
+                providers.Add(new OpenRouterProvider(settingProvider["openRouterUrl"] , settings.OpenRouterKey) { ModelOverride = SettingsManager.LoadUrl("OpenRouterModel", "") });
 
-            var gitHubUrl = SettingsManager.LoadUrl("GitHubBaseUrl", "https://models.inference.ai.azure.com");
+            var gitHubUrl = SettingsManager.LoadUrl("GitHubBaseUrl", settingProvider["gitHubBaseUrl"]);
             if (!string.IsNullOrWhiteSpace(settings.GitHubKey) && settings.GitHubEnabled)
                 providers.Add(new GitHubModelsProvider(gitHubUrl, settings.GitHubKey) { ModelOverride = SettingsManager.LoadUrl("GitHubModel", "") });
 
-            var nvidiaUrl = SettingsManager.LoadUrl("NvidiaBaseUrl", "https://integrate.api.nvidia.com/v1");
+            var nvidiaUrl = SettingsManager.LoadUrl("NvidiaBaseUrl", settingProvider["nvidiaBaseUrl"]);
             if (!string.IsNullOrWhiteSpace(settings.NvidiaKey) && settings.NvidiaEnabled)
                 providers.Add(new NvidiaProvider(nvidiaUrl, settings.NvidiaKey) { ModelOverride = SettingsManager.LoadUrl("NvidiaModel", "") });
 
-            var ollamaCloudUrl = SettingsManager.LoadUrl("OllamaCloudBaseUrl", "https://api.ollama.com/v1");
+            var ollamaCloudUrl = SettingsManager.LoadUrl("OllamaCloudBaseUrl", settingProvider["ollamaCloudBaseUrl"]);
             if (!string.IsNullOrWhiteSpace(settings.OllamaCloudKey) && settings.OllamaCloudEnabled)
                 providers.Add(new OllamaCloudProvider(ollamaCloudUrl, settings.OllamaCloudKey) { ModelOverride = SettingsManager.LoadUrl("OllamaCloudModel", "") });
 
-            var claudeUrl = SettingsManager.LoadUrl("ClaudeBaseUrl", "https://api.anthropic.com");
+            var claudeUrl = SettingsManager.LoadUrl("ClaudeBaseUrl", settingProvider["anthropicBaseUrl"]);
             if (!string.IsNullOrWhiteSpace(settings.ClaudeKey) && settings.ClaudeEnabled)
                 providers.Add(new ClaudeProvider(claudeUrl, settings.ClaudeKey));
 
-            var perplexityUrl = SettingsManager.LoadUrl("PerplexityBaseUrl", "https://api.perplexity.ai");
+            var perplexityUrl = SettingsManager.LoadUrl("PerplexityBaseUrl", settingProvider["perplexityBaseUrl"]);
             if (!string.IsNullOrWhiteSpace(settings.PerplexityKey) && settings.PerplexityEnabled)
                 providers.Add(new PerplexityProvider(perplexityUrl, settings.PerplexityKey) { ModelOverride = SettingsManager.LoadUrl("PerplexityModel", "") });
+
+
         }
 
         // Reads generation parameters from settings into the global ProviderOptions.

@@ -31,10 +31,10 @@ namespace Aisteria
             public string DefaultHeader;  // default header name (e.g. Authorization or x-api-key)
 
             public CheckBox Chk;
-            public TextBox  Key;
-            public TextBox  Url;
-            public TextBox  Model;
-            public TextBox  Header;
+            public TextBox Key;
+            public TextBox Url;
+            public TextBox Model;
+            public TextBox Header;
             public CheckBox VerboseChk;
         }
 
@@ -45,23 +45,23 @@ namespace Aisteria
 
             _defs = new List<ProviderDef>
             {
-                new() { Label = "OpenAI",         ExportKey = "OpenAI",     KeyProp = "OpenAIKey",     EnabledProp = "OpenAIEnabled",     UrlName = "OpenAIBaseUrl",     DefaultUrl = "https://api.openai.com/v1" },
-                new() { Label = "Google Gemini",  ExportKey = "Gemini",     KeyProp = "GeminiKey",     EnabledProp = "GeminiEnabled",     UrlName = "GeminiUrl",         DefaultUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" },
-                new() { Label = "Groq",           ExportKey = "Groq",       KeyProp = "GroqKey",       EnabledProp = "GroqEnabled",       UrlName = "GroqBaseUrl",       DefaultUrl = "https://api.groq.com/openai/v1" },
-                new() { Label = "DeepSeek",       ExportKey = "DeepSeek",   KeyProp = "DeepSeekKey",   EnabledProp = "DeepSeekEnabled",   UrlName = "DeepSeekBaseUrl",   DefaultUrl = "https://api.deepseek.com/v1" },
-                new() { Label = "Mistral",        ExportKey = "Mistral",    KeyProp = "MistralKey",    EnabledProp = "MistralEnabled",    UrlName = "MistralBaseUrl",    DefaultUrl = "https://api.mistral.ai/v1" },
-                new() { Label = "OpenRouter",     ExportKey = "OpenRouter", KeyProp = "OpenRouterKey", EnabledProp = "OpenRouterEnabled", UrlName = "OpenRouterBaseUrl", DefaultUrl = "https://openrouter.ai/api/v1" },
-                new() { Label = "GitHub Models",  ExportKey = "GitHub",     KeyProp = "GitHubKey",     EnabledProp = "GitHubEnabled",     UrlName = "GitHubBaseUrl",     DefaultUrl = "https://models.inference.ai.azure.com" },
-                new() { Label = "NVIDIA",         ExportKey = "NVIDIA",     KeyProp = "NvidiaKey",     EnabledProp = "NvidiaEnabled",     UrlName = "NvidiaBaseUrl",     DefaultUrl = "https://integrate.api.nvidia.com/v1" },
-                new() { Label = "Ollama Cloud",   ExportKey = "OllamaCloud",KeyProp = "OllamaCloudKey",EnabledProp = "OllamaCloudEnabled",UrlName = "OllamaCloudBaseUrl",DefaultUrl = "https://api.ollama.com/v1" },
-                new() { Label = "Anthropic Claude",ExportKey = "Claude",    KeyProp = "ClaudeKey",     EnabledProp = "ClaudeEnabled",     UrlName = "ClaudeBaseUrl",     DefaultUrl = "https://api.anthropic.com" },
-                new() { Label = "Perplexity",     ExportKey = "Perplexity", KeyProp = "PerplexityKey", EnabledProp = "PerplexityEnabled", UrlName = "PerplexityBaseUrl", DefaultUrl = "https://api.perplexity.ai" },
+                new() { Label = "OpenAI",         ExportKey = "OpenAI",     KeyProp = "OpenAIKey",     EnabledProp = "OpenAIEnabled",     UrlName = "OpenAIBaseUrl",     DefaultUrl = SettingsManager.GetDefaultUrl("OpenAIBaseUrl") },
+                new() { Label = "Google Gemini",  ExportKey = "Gemini",     KeyProp = "GeminiKey",     EnabledProp = "GeminiEnabled",     UrlName = "GeminiUrl",         DefaultUrl = SettingsManager.GetDefaultUrl("GeminiUrl") },
+                new() { Label = "Groq",           ExportKey = "Groq",       KeyProp = "GroqKey",       EnabledProp = "GroqEnabled",       UrlName = "GroqBaseUrl",       DefaultUrl = SettingsManager.GetDefaultUrl("GroqBaseUrl") },
+                new() { Label = "DeepSeek",       ExportKey = "DeepSeek",   KeyProp = "DeepSeekKey",   EnabledProp = "DeepSeekEnabled",   UrlName = "DeepSeekBaseUrl",   DefaultUrl = SettingsManager.GetDefaultUrl("DeepSeekBaseUrl") },
+                new() { Label = "Mistral",        ExportKey = "Mistral",    KeyProp = "MistralKey",    EnabledProp = "MistralEnabled",    UrlName = "MistralBaseUrl",    DefaultUrl = SettingsManager.GetDefaultUrl("MistralBaseUrl") },
+                new() { Label = "OpenRouter",     ExportKey = "OpenRouter", KeyProp = "OpenRouterKey", EnabledProp = "OpenRouterEnabled", UrlName = "OpenRouterBaseUrl", DefaultUrl = SettingsManager.GetDefaultUrl("OpenRouterBaseUrl") },
+                new() { Label = "GitHub Models",  ExportKey = "GitHub",     KeyProp = "GitHubKey",     EnabledProp = "GitHubEnabled",     UrlName = "GitHubBaseUrl",     DefaultUrl = SettingsManager.GetDefaultUrl("GitHubBaseUrl") },
+                new() { Label = "NVIDIA",         ExportKey = "NVIDIA",     KeyProp = "NvidiaKey",     EnabledProp = "NvidiaEnabled",     UrlName = "NvidiaBaseUrl",     DefaultUrl = SettingsManager.GetDefaultUrl("NvidiaBaseUrl") },
+                new() { Label = "Ollama Cloud",   ExportKey = "OllamaCloud",KeyProp = "OllamaCloudKey",EnabledProp = "OllamaCloudEnabled",UrlName = "OllamaCloudBaseUrl",DefaultUrl = SettingsManager.GetDefaultUrl("OllamaCloudBaseUrl") },
+                new() { Label = "Anthropic Claude",ExportKey = "Claude",    KeyProp = "ClaudeKey",     EnabledProp = "ClaudeEnabled",     UrlName = "ClaudeBaseUrl",     DefaultUrl = SettingsManager.GetDefaultUrl("ClaudeBaseUrl") },
+                new() { Label = "Perplexity",     ExportKey = "Perplexity", KeyProp = "PerplexityKey", EnabledProp = "PerplexityEnabled", UrlName = "PerplexityBaseUrl", DefaultUrl = SettingsManager.GetDefaultUrl("PerplexityBaseUrl") },
             };
 
             BuildProviderRows(settings);
 
             // ── Ollama (local) tab ──
-            txtOllamaUrl.Text   = settings.OllamaUrl;
+            txtOllamaUrl.Text = settings.OllamaUrl;
             chkOllama.IsChecked = settings.OllamaEnabled;
             if (!string.IsNullOrWhiteSpace(settings.OllamaModel))
             {
@@ -70,8 +70,8 @@ namespace Aisteria
             }
 
             // ── Generation tab ──
-            txtTemperature.Text  = SettingsManager.LoadUrl("Temperature", "");
-            txtMaxTokens.Text    = SettingsManager.LoadUrl("MaxTokens", "");
+            txtTemperature.Text = SettingsManager.LoadUrl("Temperature", "");
+            txtMaxTokens.Text = SettingsManager.LoadUrl("MaxTokens", "");
             txtSystemPrompt.Text = SettingsManager.LoadUrl("SystemPrompt", "");
         }
 
@@ -203,9 +203,9 @@ namespace Aisteria
                 {
                     var m = models[i];
                     string name = m.TryGetProperty("name", out var np) ? np.GetString() ?? "" : "";
-                    long size   = m.TryGetProperty("size", out var sp) ? sp.GetInt64() : 0;
+                    long size = m.TryGetProperty("size", out var sp) ? sp.GetInt64() : 0;
                     string paramSize = "";
-                    string modified  = "";
+                    string modified = "";
                     if (m.TryGetProperty("details", out var dp) && dp.TryGetProperty("parameter_size", out var pp))
                         paramSize = pp.GetString() ?? "";
                     if (m.TryGetProperty("modified_at", out var mp) && DateTime.TryParse(mp.GetString(), out var dt))
@@ -218,26 +218,15 @@ namespace Aisteria
                 lvwModels.ItemsSource = rows;
                 int idx = cmbOllamaModel.Items.IndexOf(savedModel);
                 cmbOllamaModel.SelectedIndex = idx >= 0 ? idx : 0;
-                ShowStatus($"✓ Connected — {count} model{(count == 1 ? "" : "s")} available", Colors.Green);
-            }
-            catch (OperationCanceledException)
-            {
-                ShowStatus("✗ Connection timed out", Colors.OrangeRed);
             }
             catch (Exception ex)
             {
-                ShowStatus($"✗ Error: {ex.Message}", Colors.OrangeRed);
+                ShowStatus("Failed: " + ex.Message, Colors.OrangeRed);
             }
             finally
             {
                 btn.IsEnabled = true;
             }
-        }
-
-        private void lvwModels_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (lvwModels.SelectedItem is OllamaRow row)
-                cmbOllamaModel.Text = row.Name;
         }
 
         private void ShowStatus(string text, Color color)
@@ -249,7 +238,7 @@ namespace Aisteria
         private static string FormatBytes(long bytes)
         {
             if (bytes >= 1_000_000_000) return $"{bytes / 1_000_000_000.0:F1} GB";
-            if (bytes >= 1_000_000)     return $"{bytes / 1_000_000.0:F1} MB";
+            if (bytes >= 1_000_000) return $"{bytes / 1_000_000.0:F1} MB";
             return $"{bytes / 1_000.0:F1} KB";
         }
 
@@ -259,8 +248,8 @@ namespace Aisteria
         {
             var updated = new Settings
             {
-                OllamaUrl     = txtOllamaUrl.Text,
-                OllamaModel   = cmbOllamaModel.Text,
+                OllamaUrl = txtOllamaUrl.Text,
+                OllamaModel = cmbOllamaModel.Text,
                 OllamaEnabled = chkOllama.IsChecked == true,
             };
 
@@ -284,8 +273,8 @@ namespace Aisteria
             SettingsManager.SaveEnabled("OllamaEnabled", chkOllama.IsChecked == true);
 
             // Generation parameters (global)
-            SettingsManager.SaveUrl("Temperature",  (txtTemperature.Text ?? "").Trim());
-            SettingsManager.SaveUrl("MaxTokens",    (txtMaxTokens.Text ?? "").Trim());
+            SettingsManager.SaveUrl("Temperature", (txtTemperature.Text ?? "").Trim());
+            SettingsManager.SaveUrl("MaxTokens", (txtMaxTokens.Text ?? "").Trim());
             SettingsManager.SaveUrl("SystemPrompt", txtSystemPrompt.Text ?? "");
 
             CurrentSettings = updated;
@@ -299,9 +288,9 @@ namespace Aisteria
         {
             var dlg = new Microsoft.Win32.SaveFileDialog
             {
-                Title      = "Export API Keys",
-                Filter     = "JSON files (*.json)|*.json|All files (*.*)|*.*",
-                FileName   = "ai-aggregator-keys.json",
+                Title = "Export API Keys",
+                Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                FileName = "ai-aggregator-keys.json",
                 DefaultExt = "json",
             };
             if (dlg.ShowDialog() != true) return;
@@ -326,11 +315,18 @@ namespace Aisteria
             }
         }
 
+        private void lvwModels_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // When the user picks a model from the list, copy it into the Ollama model combo box.
+            if (lvwModels.SelectedItem is OllamaRow row)
+                cmbOllamaModel.Text = row.Name;
+        }
+
         private void btnImportKeys_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new Microsoft.Win32.OpenFileDialog
             {
-                Title  = "Import API Keys",
+                Title = "Import API Keys",
                 Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
             };
             if (dlg.ShowDialog() != true) return;
@@ -354,11 +350,11 @@ namespace Aisteria
             }
         }
 
-        // ── Reflection helpers ────────────────────────────────────────
+        // ── Reflection helpers ───────────────────────────────────────
 
-        private static string GetStr(Settings s, string prop)  => (string)typeof(Settings).GetProperty(prop)!.GetValue(s);
-        private static bool   GetBool(Settings s, string prop)  => (bool)typeof(Settings).GetProperty(prop)!.GetValue(s);
-        private static void   SetStr(Settings s, string prop, string v) => typeof(Settings).GetProperty(prop)!.SetValue(s, v);
-        private static void   SetBool(Settings s, string prop, bool v)  => typeof(Settings).GetProperty(prop)!.SetValue(s, v);
+        private static string GetStr(Settings s, string prop) => (string)typeof(Settings).GetProperty(prop)!.GetValue(s);
+        private static bool GetBool(Settings s, string prop) => (bool)typeof(Settings).GetProperty(prop)!.GetValue(s);
+        private static void SetStr(Settings s, string prop, string v) => typeof(Settings).GetProperty(prop)!.SetValue(s, v);
+        private static void SetBool(Settings s, string prop, bool v) => typeof(Settings).GetProperty(prop)!.SetValue(s, v);
     }
 }

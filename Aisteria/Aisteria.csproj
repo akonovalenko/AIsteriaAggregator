@@ -12,11 +12,11 @@
 		<ApplicationIcon>app.ico</ApplicationIcon>
 
 		<!-- Application version properties -->
-		<Version>1.0.3.2</Version>
-		<AssemblyVersion>1.0.3.2</AssemblyVersion>
-		<FileVersion>1.0.3.2</FileVersion>
-		<AssemblyFileVersion>1.0.3.2</AssemblyFileVersion>
-		<InformationalVersion>1.0.3.2</InformationalVersion>
+		<Version>1.0.4.2</Version>
+		<AssemblyVersion>1.0.4.2</AssemblyVersion>
+		<FileVersion>1.0.4.2</FileVersion>
+		<AssemblyFileVersion>1.0.4.2</AssemblyFileVersion>
+		<InformationalVersion>1.0.4.2</InformationalVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

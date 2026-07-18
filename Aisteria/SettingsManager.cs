@@ -49,6 +49,9 @@ namespace Aisteria.Models
             return DecryptString(stored);
         }
 
+        // New overload: use centralized defaults when caller does not supply one.
+        public static string LoadUrl(string name) => LoadUrl(name, GetDefaultUrl(name));
+
         public static string LoadUrl(string name, string defaultValue)
         {
             var value = Get(name);
@@ -73,6 +76,37 @@ namespace Aisteria.Models
         }
 
         public static void SaveEnabled(string name, bool value) => Set(name, value ? "true" : "false");
+
+        // Public accessor for centralized defaults (used by UI / initializers).
+        public static string GetDefaultUrl(string name)
+        {
+            var _defaults = LoadProviders();
+            if (_defaults.TryGetValue(name, out var v)) return v;
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Load all provider URLs from the user store, falling back to defaults.
+        /// </summary>
+        /// <returns>The list of provider URLs.</returns>
+        public static Dictionary<string, string> LoadProviders()
+        {
+           var result = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            result.Add("openAIUrl", SettingsManager.LoadUrl("OpenAIBaseUrl", "https://api.openai.com/v1"));
+            result.Add("geminiUrl", SettingsManager.LoadUrl("GeminiUrl", "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"));
+            result.Add("groqUrl", SettingsManager.LoadUrl("GroqBaseUrl", "https://api.groq.com/openai/v1"));
+            result.Add("deepSeekUrl", SettingsManager.LoadUrl("DeepSeekBaseUrl", "https://api.deepseek.com/v1"));
+            result.Add("mistralUrl", SettingsManager.LoadUrl("MistralBaseUrl", "https://api.mistral.ai/v1"));
+            result.Add("openRouterUrl", SettingsManager.LoadUrl("OpenRouterBaseUrl", "https://openrouter.ai/api/v1")    );
+            result.Add("gitHubBaseUrl", SettingsManager.LoadUrl("GitHubBaseUrl", "https://models.inference.ai.azure.com"));
+            result.Add("nvidiaBaseUrl", SettingsManager.LoadUrl("NvidiaBaseUrl", "https://integrate.api.nvidia.com/v1"));
+            result.Add("ollamaCloudBaseUrl", SettingsManager.LoadUrl("OllamaCloudBaseUrl", "https://api.ollama.com/v1"));
+            result.Add("anthropicBaseUrl", SettingsManager.LoadUrl("ClaudeBaseUrl", "https://api.anthropic.com"));
+            result.Add("perplexityBaseUrl", SettingsManager.LoadUrl("PerplexityBaseUrl", "https://api.perplexity.ai"));
+
+            return result;
+        }
 
         // ── Store (read user file first, fall back to App.config) ──────
 
@@ -156,11 +190,7 @@ namespace Aisteria.Models
                 byte[] decrypted = ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser);
                 return Encoding.UTF8.GetString(decrypted);
             }
-            catch (FormatException)
-            {
-                return string.Empty;
-            }
-            catch (CryptographicException)
+            catch
             {
                 return string.Empty;
             }
