@@ -67,13 +67,13 @@ namespace Aisteria
 "Provider        Text model                  Vision model\r\n" +
 "──────────────────────────────────────────────────────────────────────\r\n" +
 "OpenAI          gpt-4o-mini                 gpt-4o\r\n" +
-"Google Gemini   gemini-*                    gemini-* (native)\r\n" +
-"Groq            llama-3.3-70b               llama-4-scout-17b\r\n" +
+"Google Gemini   gemini-3.8-flash             gemini-3.8-flash\r\n" +
+"Groq            openai/gpt-oss-120b        qwen/qwen3.8-27b\r\n" +
 "DeepSeek        deepseek-chat               — (text only)\r\n" +
-"Mistral         mistral-small-latest        pixtral-12b-2409\r\n" +
+"Mistral         mistral-small-latest        mistral-small-latest\r\n" +
 "OpenRouter      deepseek/deepseek-r1        openrouter/free (auto free vision)\r\n" +
 "GitHub Models   gpt-4o-mini                 gpt-4o\r\n" +
-"NVIDIA NIM      llama-3.3-70b-instruct      llama-3.2-90b-vision\r\n" +
+"NVIDIA NIM      nemotron-3-super-120b     deepseek-v4.1-flash\r\n" +
 "Ollama Cloud    llama3.2                    llama3.2-vision\r\n" +
 "Ollama (local)  auto-detected               auto-detected\r\n" +
 "Anthropic Claude claude-haiku-4.5           claude-haiku-4.5\r\n" +

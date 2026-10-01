@@ -50,6 +50,25 @@ namespace Aisteria.Providers
             return $"Error: HTTP {statusCode}: {body}";
         }
 
+        public static TimeSpan? GetRetryDelay(HttpResponseMessage response)
+        {
+            if (response == null) return null;
+
+            if (response.Headers.RetryAfter?.Delta is TimeSpan delta && delta > TimeSpan.Zero)
+                return ClampRetryDelay(delta);
+
+            if (response.Headers.RetryAfter?.Date is DateTimeOffset date)
+            {
+                var wait = date - DateTimeOffset.UtcNow;
+                if (wait > TimeSpan.Zero) return ClampRetryDelay(wait);
+            }
+
+            return null;
+        }
+
+        private static TimeSpan ClampRetryDelay(TimeSpan delay) =>
+            delay > TimeSpan.FromSeconds(30) ? TimeSpan.FromSeconds(30) : delay;
+
         /// <summary>Reads OpenAI-style token usage (usage.prompt_tokens / usage.completion_tokens) from a parsed root element.</summary>
         public static (int? prompt, int? completion) ReadUsage(JsonElement root)
         {

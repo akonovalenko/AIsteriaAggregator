@@ -6,7 +6,7 @@ namespace Aisteria.Providers
     {
         public override string Name => "Perplexity (Sonar)";
 
-        public PerplexityProvider(string baseUrl, string apiKey)
-            : base(baseUrl, "sonar", apiKey) { }
+        public PerplexityProvider(string baseUrl, string apiKey, string model)
+            : base(baseUrl, model, apiKey) { }
     }
 }

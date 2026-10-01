@@ -4,7 +4,7 @@ namespace Aisteria.Providers
     {
         public override string Name => "DeepSeek";
 
-        public DeepSeekProvider(string baseUrl, string apiKey)
-            : base(baseUrl, "deepseek-chat", apiKey) { }
+        public DeepSeekProvider(string baseUrl, string apiKey, string model)
+            : base(baseUrl, model, apiKey) { }
     }
 }

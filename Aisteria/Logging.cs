@@ -160,26 +160,33 @@ namespace Aisteria
                 if (!IsVerboseEnabled(provider.Name)) return;
 
                 var sb = new System.Text.StringBuilder();
-                sb.AppendLine($"Request: {request.Method} {request.RequestUri}");
-                sb.AppendLine("Request headers:");
-                foreach (var h in request.Headers)
+                if (request != null)
                 {
-                    var vals = string.Join(",", h.Value);
-                    sb.AppendLine($"  {h.Key}: {(IsSensitiveHeader(h.Key) ? "<masked>" : vals)}");
-                }
-                if (request.Content != null)
-                {
-                    foreach (var h in request.Content.Headers)
+                    sb.AppendLine($"Request: {request.Method} {request.RequestUri}");
+                    sb.AppendLine("Request headers:");
+                    foreach (var h in request.Headers)
                     {
                         var vals = string.Join(",", h.Value);
                         sb.AppendLine($"  {h.Key}: {(IsSensitiveHeader(h.Key) ? "<masked>" : vals)}");
                     }
-                    try
+                    if (request.Content != null)
                     {
-                        var rc = request.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                        if (!string.IsNullOrWhiteSpace(rc)) sb.AppendLine("Request body:\n" + Truncate(rc, 4000));
+                        foreach (var h in request.Content.Headers)
+                        {
+                            var vals = string.Join(",", h.Value);
+                            sb.AppendLine($"  {h.Key}: {(IsSensitiveHeader(h.Key) ? "<masked>" : vals)}");
+                        }
+                        try
+                        {
+                            var rc = request.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                            if (!string.IsNullOrWhiteSpace(rc)) sb.AppendLine("Request body:\n" + Truncate(rc, 4000));
+                        }
+                        catch { }
                     }
-                    catch { }
+                }
+                else
+                {
+                    sb.AppendLine("Request: <not retained after retry>");
                 }
 
                 sb.AppendLine($"Response: {(int)response.StatusCode} {response.ReasonPhrase}");

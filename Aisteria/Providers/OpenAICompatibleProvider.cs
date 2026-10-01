@@ -15,6 +15,12 @@ namespace Aisteria.Providers
         protected string Model { get; }
         protected string VisionModel { get; }
 
+        protected virtual int? GetMaxTokens() => ProviderOptions.MaxTokens;
+        protected virtual int GetMaxAttempts() => 5;
+        protected virtual void ConfigureRequestBody(Dictionary<string, object> body) { }
+        protected virtual string GetErrorMessage(string json, int statusCode, HttpResponseMessage response) =>
+            Http.ErrorMessage(json, statusCode);
+
         public abstract string Name { get; }
         public bool SupportsImages => VisionModel != null;
 
@@ -61,36 +67,55 @@ namespace Aisteria.Providers
                 };
             }
 
-            // Build body with optional temperature / max_tokens.
+            // Build body with optional generation settings.
             var body = new Dictionary<string, object> { ["model"] = activeModel, ["messages"] = messages };
             if (ProviderOptions.Temperature.HasValue) body["temperature"] = ProviderOptions.Temperature.Value;
-            if (ProviderOptions.MaxTokens.HasValue)   body["max_tokens"]  = ProviderOptions.MaxTokens.Value;
+            var maxTokens = GetMaxTokens();
+            if (maxTokens.HasValue) body["max_tokens"] = maxTokens.Value;
+            ConfigureRequestBody(body);
             string bodyJson = JsonSerializer.Serialize(body);
 
             try
             {
-                using var req = new HttpRequestMessage(HttpMethod.Post, BaseUrl.TrimEnd('/') + "/chat/completions")
-                {
-                    Content = new StringContent(bodyJson, Encoding.UTF8, "application/json")
-                };
-                // Per-request header (shared client → do not use DefaultRequestHeaders)
-                req.Headers.TryAddWithoutValidation("Authorization", $"Bearer {ApiKey}");
-
                 using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 timeoutCts.CancelAfter(TimeSpan.FromSeconds(100));
 
-                var response = await Http.Client.SendAsync(req, timeoutCts.Token);
-                var json = await response.Content.ReadAsStringAsync(timeoutCts.Token);
+                HttpResponseMessage response = null;
+                string json = null;
+                int maxAttempts = Math.Max(1, GetMaxAttempts());
 
-                // If verbose logging enabled, record request/response details (mask auth)
+                for (int attempt = 0; attempt < maxAttempts; attempt++)
+                {
+                    using var request = new HttpRequestMessage(HttpMethod.Post, BuildChatCompletionsUrl(BaseUrl))
+                    {
+                        Content = new StringContent(bodyJson, Encoding.UTF8, "application/json")
+                    };
+                    request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {ApiKey}");
+
+                    response?.Dispose();
+                    response = await Http.Client.SendAsync(request, timeoutCts.Token);
+                    json = await response.Content.ReadAsStringAsync(timeoutCts.Token);
+
+                    if ((int)response.StatusCode != 429 || attempt == maxAttempts - 1) break;
+
+                    var delay = Http.GetRetryDelay(response) ??
+                                TimeSpan.FromSeconds(Math.Min(30, Math.Pow(2, attempt)));
+                    try { Logger.Instance.LogDiagnostics(this, $"HTTP 429 from {Name}. Retry {attempt + 1}/{maxAttempts - 1} in {delay.TotalSeconds:0.#}s."); } catch { }
+                    await Task.Delay(delay, timeoutCts.Token);
+                }
+
                 try
                 {
-                    Logger.Instance.LogRequestResponse(this, req, response, json);
+                    Logger.Instance.LogRequestResponse(this, null, response, json);
                 }
                 catch { }
 
                 if (!response.IsSuccessStatusCode)
-                    return AiResponse.Fail(Http.ErrorMessage(json, (int)response.StatusCode));
+                {
+                    var message = GetErrorMessage(json, (int)response.StatusCode, response);
+                    response.Dispose();
+                    return AiResponse.Fail(message);
+                }
 
                 JsonDocument doc;
                 try { doc = JsonDocument.Parse(json); }
@@ -105,6 +130,7 @@ namespace Aisteria.Providers
                     if (string.IsNullOrWhiteSpace(text)) return AiResponse.Fail("Error: empty content in response");
 
                     var (pt, cot) = Http.ReadUsage(doc.RootElement);
+                    response.Dispose();
                     return AiResponse.Ok(text, pt, cot);
                 }
             }
@@ -124,6 +150,13 @@ namespace Aisteria.Providers
             {
                 return AiResponse.Fail($"Error: {ex.GetType().Name}: {ex.Message}");
             }
+        }
+
+        private static string BuildChatCompletionsUrl(string baseUrl)
+        {
+            var url = (baseUrl ?? string.Empty).TrimEnd('/');
+            if (url.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase)) return url;
+            return url + "/chat/completions";
         }
     }
 }

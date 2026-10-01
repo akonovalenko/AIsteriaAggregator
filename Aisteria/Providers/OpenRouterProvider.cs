@@ -2,11 +2,17 @@ namespace Aisteria.Providers
 {
     public class OpenRouterProvider : OpenAICompatibleProvider
     {
-        public override string Name => "OpenRouter (DeepSeek R1)";
+        private const int SafeMaxTokens = 8192;
 
-        public OpenRouterProvider(string baseUrl, string apiKey)
-            // Vision uses OpenRouter's free-model router, which auto-selects an available
-            // free model that supports image input — robust against free-slug churn.
-            : base(baseUrl, "deepseek/deepseek-r1", apiKey, "openrouter/free") { }
+        public override string Name => "OpenRouter";
+
+        public OpenRouterProvider(string baseUrl, string apiKey, string model, string visionModel)
+            : base(baseUrl, model, apiKey, visionModel) { }
+
+        protected override int? GetMaxTokens()
+        {
+            var value = base.GetMaxTokens();
+            return value.HasValue ? System.Math.Min(value.Value, SafeMaxTokens) : null;
+        }
     }
 }

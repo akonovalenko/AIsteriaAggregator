@@ -12,7 +12,7 @@ namespace Aisteria.Providers
     // x-api-key + anthropic-version headers and a {content: [text|image]} message shape.
     public class ClaudeProvider : IAIProvider
     {
-        private const string Model     = "claude-haiku-4-5-20251001";
+        private readonly string _model;
         private const int    MaxTokens = 1024;
 
         private readonly string _apiKey;
@@ -21,10 +21,11 @@ namespace Aisteria.Providers
         public string Name           => "Claude (Haiku 4.5)";
         public bool   SupportsImages => true;
 
-        public ClaudeProvider(string baseUrl, string apiKey)
+        public ClaudeProvider(string baseUrl, string apiKey, string model)
         {
             _baseUrl = baseUrl;
             _apiKey  = apiKey;
+            _model   = model;
         }
 
         public async Task<AiResponse> AskAsync(string prompt, IReadOnlyList<ImageInput> images = null, CancellationToken ct = default)
@@ -50,7 +51,7 @@ namespace Aisteria.Providers
 
             var body = new System.Collections.Generic.Dictionary<string, object>
             {
-                ["model"]      = Model,
+                ["model"]      = _model,
                 ["max_tokens"] = ProviderOptions.MaxTokens ?? MaxTokens,
                 ["system"]     = ProviderOptions.SystemInstruction,
                 ["messages"]   = new[] { new { role = "user", content } }

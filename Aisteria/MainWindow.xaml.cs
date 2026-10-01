@@ -43,8 +43,8 @@ namespace Aisteria
             {
                 OpenAIKey      = SettingsManager.LoadKey("OpenAIKey"),
                 GeminiKey      = SettingsManager.LoadKey("GeminiKey"),
-                OllamaUrl      = SettingsManager.LoadUrl("OllamaUrl", ""),
-                OllamaModel    = SettingsManager.LoadUrl("OllamaModel", ""),
+                OllamaUrl      = SettingsManager.GetDefaultUrl("OllamaUrl"),
+                OllamaModel    = SettingsManager.GetDefaultModel("OllamaModel"),
                 GroqKey        = SettingsManager.LoadKey("GroqKey"),
                 DeepSeekKey    = SettingsManager.LoadKey("DeepSeekKey"),
                 MistralKey     = SettingsManager.LoadKey("MistralKey"),
@@ -282,7 +282,6 @@ namespace Aisteria
         private void OnProviderToggled(ProviderToggle t)
         {
             typeof(Settings).GetProperty(t.EnabledProp).SetValue(settings, t.IsEnabled);
-            SettingsManager.SaveEnabled(t.EnabledProp, t.IsEnabled);
             LoadProviders();
             ShowProviderStatus();
         }
@@ -1046,45 +1045,45 @@ namespace Aisteria
             var settingProvider = SettingsManager.LoadProviders();
 
             if (!string.IsNullOrWhiteSpace(settings.OpenAIKey) && settings.OpenAIEnabled)
-                providers.Add(new OpenAIProvider(settingProvider["openAIUrl"], settings.OpenAIKey) { ModelOverride = SettingsManager.LoadUrl("OpenAIModel", "") });
+                providers.Add(new OpenAIProvider(settingProvider["openAIUrl"], settings.OpenAIKey, SettingsManager.LoadModel("OpenAIModel"), SettingsManager.LoadModel("OpenAIVisionModel")));
 
             if (!string.IsNullOrWhiteSpace(settings.GeminiKey) && settings.GeminiEnabled)
-                providers.Add(new GeminiProvider(settingProvider["geminiUrl"], settings.GeminiKey));
+                providers.Add(new GeminiProvider(settingProvider["geminiUrl"], settings.GeminiKey, SettingsManager.LoadModel("GeminiModel")));
 
             if (!string.IsNullOrWhiteSpace(settings.OllamaUrl) && settings.OllamaEnabled)
-                providers.Add(new OllamaProvider(settingProvider["ollamaUrl"], settings.OllamaModel));
+                providers.Add(new OllamaProvider(settings.OllamaUrl, settings.OllamaModel));
 
             if (!string.IsNullOrWhiteSpace(settings.GroqKey) && settings.GroqEnabled)
-                providers.Add(new GroqProvider(settingProvider["groqUrl"], settings.GroqKey) { ModelOverride = SettingsManager.LoadUrl("GroqModel", "") });
+                providers.Add(new GroqProvider(settingProvider["groqUrl"], settings.GroqKey, SettingsManager.LoadModel("GroqModel"), SettingsManager.LoadModel("GroqVisionModel")));
 
             if (!string.IsNullOrWhiteSpace(settings.DeepSeekKey) && settings.DeepSeekEnabled)
-                providers.Add(new DeepSeekProvider(settingProvider["deepSeekUrl"], settings.DeepSeekKey) { ModelOverride = SettingsManager.LoadUrl("DeepSeekModel", "") });
+                providers.Add(new DeepSeekProvider(settingProvider["deepSeekUrl"], settings.DeepSeekKey, SettingsManager.LoadModel("DeepSeekModel")));
 
             if (!string.IsNullOrWhiteSpace(settings.MistralKey) && settings.MistralEnabled)
-                providers.Add(new MistralProvider(settingProvider["mistralUrl"], settings.MistralKey) { ModelOverride = SettingsManager.LoadUrl("MistralModel", "") });
+                providers.Add(new MistralProvider(settingProvider["mistralUrl"], settings.MistralKey, SettingsManager.LoadModel("MistralModel"), SettingsManager.LoadModel("MistralVisionModel")));
 
             if (!string.IsNullOrWhiteSpace(settings.OpenRouterKey) && settings.OpenRouterEnabled)
-                providers.Add(new OpenRouterProvider(settingProvider["openRouterUrl"] , settings.OpenRouterKey) { ModelOverride = SettingsManager.LoadUrl("OpenRouterModel", "") });
+                providers.Add(new OpenRouterProvider(settingProvider["openRouterUrl"], settings.OpenRouterKey, SettingsManager.LoadModel("OpenRouterModel"), SettingsManager.LoadModel("OpenRouterVisionModel")));
 
-            var gitHubUrl = SettingsManager.LoadUrl("GitHubBaseUrl", settingProvider["gitHubBaseUrl"]);
+            var gitHubUrl = settingProvider["gitHubBaseUrl"];
             if (!string.IsNullOrWhiteSpace(settings.GitHubKey) && settings.GitHubEnabled)
-                providers.Add(new GitHubModelsProvider(gitHubUrl, settings.GitHubKey) { ModelOverride = SettingsManager.LoadUrl("GitHubModel", "") });
+                providers.Add(new GitHubModelsProvider(gitHubUrl, settings.GitHubKey, SettingsManager.LoadModel("GitHubModel"), SettingsManager.LoadModel("GitHubVisionModel")));
 
-            var nvidiaUrl = SettingsManager.LoadUrl("NvidiaBaseUrl", settingProvider["nvidiaBaseUrl"]);
+            var nvidiaUrl = settingProvider["nvidiaBaseUrl"];
             if (!string.IsNullOrWhiteSpace(settings.NvidiaKey) && settings.NvidiaEnabled)
-                providers.Add(new NvidiaProvider(nvidiaUrl, settings.NvidiaKey) { ModelOverride = SettingsManager.LoadUrl("NvidiaModel", "") });
+                providers.Add(new NvidiaProvider(nvidiaUrl, settings.NvidiaKey, SettingsManager.LoadModel("NvidiaModel"), SettingsManager.LoadModel("NvidiaVisionModel")));
 
-            var ollamaCloudUrl = SettingsManager.LoadUrl("OllamaCloudBaseUrl", settingProvider["ollamaCloudBaseUrl"]);
+            var ollamaCloudUrl = settingProvider["ollamaCloudBaseUrl"];
             if (!string.IsNullOrWhiteSpace(settings.OllamaCloudKey) && settings.OllamaCloudEnabled)
-                providers.Add(new OllamaCloudProvider(ollamaCloudUrl, settings.OllamaCloudKey) { ModelOverride = SettingsManager.LoadUrl("OllamaCloudModel", "") });
+                providers.Add(new OllamaCloudProvider(ollamaCloudUrl, settings.OllamaCloudKey, SettingsManager.LoadModel("OllamaCloudModel"), SettingsManager.LoadModel("OllamaCloudVisionModel")));
 
-            var claudeUrl = SettingsManager.LoadUrl("ClaudeBaseUrl", settingProvider["anthropicBaseUrl"]);
+            var claudeUrl = settingProvider["anthropicBaseUrl"];
             if (!string.IsNullOrWhiteSpace(settings.ClaudeKey) && settings.ClaudeEnabled)
-                providers.Add(new ClaudeProvider(claudeUrl, settings.ClaudeKey));
+                providers.Add(new ClaudeProvider(claudeUrl, settings.ClaudeKey, SettingsManager.LoadModel("ClaudeModel")));
 
-            var perplexityUrl = SettingsManager.LoadUrl("PerplexityBaseUrl", settingProvider["perplexityBaseUrl"]);
+            var perplexityUrl = settingProvider["perplexityBaseUrl"];
             if (!string.IsNullOrWhiteSpace(settings.PerplexityKey) && settings.PerplexityEnabled)
-                providers.Add(new PerplexityProvider(perplexityUrl, settings.PerplexityKey) { ModelOverride = SettingsManager.LoadUrl("PerplexityModel", "") });
+                providers.Add(new PerplexityProvider(perplexityUrl, settings.PerplexityKey, SettingsManager.LoadModel("PerplexityModel")));
 
 
         }
@@ -1093,14 +1092,14 @@ namespace Aisteria
         private void ApplyGenerationOptions()
         {
             ProviderOptions.Temperature =
-                double.TryParse(SettingsManager.LoadUrl("Temperature", ""),
+                double.TryParse(SettingsManager.GetDefaultUrl("Temperature"),
                     System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var t)
                     ? t : (double?)null;
 
             ProviderOptions.MaxTokens =
-                int.TryParse(SettingsManager.LoadUrl("MaxTokens", ""), out var m) && m > 0 ? m : (int?)null;
+                int.TryParse(SettingsManager.GetDefaultUrl("MaxTokens"), out var m) && m > 0 ? m : (int?)null;
 
-            ProviderOptions.ExtraSystem = SettingsManager.LoadUrl("SystemPrompt", "");
+            ProviderOptions.ExtraSystem = SettingsManager.GetDefaultUrl("SystemPrompt");
         }
     }
 }

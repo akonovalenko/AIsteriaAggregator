@@ -20,10 +20,10 @@ namespace Aisteria.Models
     ///   * may live under Program Files (read-only) once installed.
     /// Any of those made saved API keys "disappear" and the app report "no providers".
     ///
-    /// Reads prefer the user store; when a name was never written by the user we fall back
-    /// to App.config (ConfigurationManager.AppSettings) so the built-in default endpoints
-    /// still apply and any legacy key stored in the old exe config is imported transparently.
-    /// Secret keys are DPAPI-encrypted (CurrentUser) exactly as before.
+    /// Only API credentials are persisted here. All non-secret application settings
+    /// (models, endpoints, provider flags and generation options) come from App.config.
+    /// Secret keys are DPAPI-encrypted (CurrentUser). Legacy non-secret entries found in
+    /// an older settings.config are discarded on the first load.
     /// </summary>
     public static class SettingsManager
     {
@@ -49,81 +49,62 @@ namespace Aisteria.Models
             return DecryptString(stored);
         }
 
-        // New overload: use centralized defaults when caller does not supply one.
-        public static string LoadUrl(string name) => LoadUrl(name, GetDefaultUrl(name));
+        public static string GetDefaultModel(string name) => ConfigurationManager.AppSettings[name] ?? string.Empty;
 
-        public static string LoadUrl(string name, string defaultValue)
-        {
-            var value = Get(name);
-            return string.IsNullOrWhiteSpace(value) ? defaultValue : value;
-        }
-
-        public static void SaveUrl(string name, string value) => Set(name, value ?? string.Empty);
+        public static string LoadModel(string name) => GetDefaultModel(name);
 
         public static bool LoadEnabled(string name)
         {
-            var value = Get(name);
-            // Default to true when never set (backwards compatible with old behavior).
+            var value = ConfigurationManager.AppSettings[name];
             return string.IsNullOrEmpty(value) || value.Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
-        // Load a boolean flag with an explicit default when the setting was never written.
         public static bool LoadFlag(string name, bool defaultValue)
         {
-            var value = Get(name);
+            var value = ConfigurationManager.AppSettings[name];
             if (string.IsNullOrEmpty(value)) return defaultValue;
             return value.Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
-        public static void SaveEnabled(string name, bool value) => Set(name, value ? "true" : "false");
+        public static string LoadUrl(string name) => GetDefaultUrl(name);
 
-        // Public accessor for centralized defaults (used by UI / initializers).
-        public static string GetDefaultUrl(string name)
-        {
-            var _defaults = LoadProviders();
-            if (_defaults.TryGetValue(name, out var v)) return v;
-            return string.Empty;
-        }
+        public static string LoadUrl(string name, string defaultValue)
+            => ConfigurationManager.AppSettings[name] ?? defaultValue;
 
-        /// <summary>
-        /// Load all provider URLs from the user store, falling back to defaults.
-        /// </summary>
-        /// <returns>The list of provider URLs.</returns>
+        public static string GetDefaultUrl(string name) => ConfigurationManager.AppSettings[name] ?? string.Empty;
+
         public static Dictionary<string, string> LoadProviders()
         {
-           var result = new Dictionary<string, string>(StringComparer.Ordinal);
-
-            result.Add("openAIUrl", SettingsManager.LoadUrl("OpenAIBaseUrl", "https://api.openai.com/v1"));
-            result.Add("geminiUrl", SettingsManager.LoadUrl("GeminiUrl", "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"));
-            result.Add("groqUrl", SettingsManager.LoadUrl("GroqBaseUrl", "https://api.groq.com/openai/v1"));
-            result.Add("deepSeekUrl", SettingsManager.LoadUrl("DeepSeekBaseUrl", "https://api.deepseek.com/v1"));
-            result.Add("mistralUrl", SettingsManager.LoadUrl("MistralBaseUrl", "https://api.mistral.ai/v1"));
-            result.Add("openRouterUrl", SettingsManager.LoadUrl("OpenRouterBaseUrl", "https://openrouter.ai/api/v1")    );
-            result.Add("gitHubBaseUrl", SettingsManager.LoadUrl("GitHubBaseUrl", "https://models.inference.ai.azure.com"));
-            result.Add("nvidiaBaseUrl", SettingsManager.LoadUrl("NvidiaBaseUrl", "https://integrate.api.nvidia.com/v1"));
-            result.Add("ollamaCloudBaseUrl", SettingsManager.LoadUrl("OllamaCloudBaseUrl", "https://api.ollama.com/v1"));
-            result.Add("anthropicBaseUrl", SettingsManager.LoadUrl("ClaudeBaseUrl", "https://api.anthropic.com"));
-            result.Add("perplexityBaseUrl", SettingsManager.LoadUrl("PerplexityBaseUrl", "https://api.perplexity.ai"));
-
+            var result = new Dictionary<string, string>(StringComparer.Ordinal);
+            result.Add("openAIUrl", GetDefaultUrl("OpenAIBaseUrl"));
+            result.Add("geminiUrl", GetDefaultUrl("GeminiUrl"));
+            result.Add("groqUrl", GetDefaultUrl("GroqBaseUrl"));
+            result.Add("deepSeekUrl", GetDefaultUrl("DeepSeekBaseUrl"));
+            result.Add("mistralUrl", GetDefaultUrl("MistralBaseUrl"));
+            result.Add("openRouterUrl", GetDefaultUrl("OpenRouterBaseUrl"));
+            result.Add("gitHubBaseUrl", GetDefaultUrl("GitHubBaseUrl"));
+            result.Add("nvidiaBaseUrl", GetDefaultUrl("NvidiaBaseUrl"));
+            result.Add("ollamaCloudBaseUrl", GetDefaultUrl("OllamaCloudBaseUrl"));
+            result.Add("anthropicBaseUrl", GetDefaultUrl("ClaudeBaseUrl"));
+            result.Add("perplexityBaseUrl", GetDefaultUrl("PerplexityBaseUrl"));
             return result;
         }
 
-        // ── Store (read user file first, fall back to App.config) ──────
-
         private static string Get(string name)
         {
+            if (!IsSecretKey(name)) return ConfigurationManager.AppSettings[name];
             lock (_lock)
             {
                 EnsureLoaded();
-                // A name present in the user store wins — even when explicitly cleared to "".
-                if (_store.TryGetValue(name, out var v)) return v;
+                return _store.TryGetValue(name, out var value) ? value : string.Empty;
             }
-            // Never written by the user: use App.config default / legacy value.
-            return ConfigurationManager.AppSettings[name];
         }
 
         private static void Set(string name, string value)
         {
+            if (!IsSecretKey(name))
+                throw new ArgumentException($"Only secret keys can be persisted: {name}", nameof(name));
+
             lock (_lock)
             {
                 EnsureLoaded();
@@ -132,10 +113,14 @@ namespace Aisteria.Models
             }
         }
 
+        private static bool IsSecretKey(string name)
+            => !string.IsNullOrWhiteSpace(name) && name.EndsWith("Key", StringComparison.Ordinal);
+
         private static void EnsureLoaded()
         {
             if (_store != null) return;
             _store = new Dictionary<string, string>(StringComparer.Ordinal);
+            bool cleanupRequired = false;
             try
             {
                 if (File.Exists(FilePath))
@@ -144,14 +129,19 @@ namespace Aisteria.Models
                     foreach (var add in doc.Root?.Elements("add") ?? Enumerable.Empty<XElement>())
                     {
                         var key = (string)add.Attribute("key");
-                        if (!string.IsNullOrEmpty(key))
+                        if (string.IsNullOrEmpty(key)) continue;
+
+                        if (IsSecretKey(key))
                             _store[key] = (string)add.Attribute("value") ?? string.Empty;
+                        else
+                            cleanupRequired = true;
                     }
+
+                    if (cleanupRequired) Persist();
                 }
             }
             catch
             {
-                // Corrupt/unreadable settings file must never crash startup — start empty.
                 _store = new Dictionary<string, string>(StringComparer.Ordinal);
             }
         }
@@ -163,7 +153,7 @@ namespace Aisteria.Models
 
             var doc = new XDocument(
                 new XElement("settings",
-                    _store.Select(kv =>
+                    _store.Where(kv => IsSecretKey(kv.Key)).Select(kv =>
                         new XElement("add",
                             new XAttribute("key", kv.Key),
                             new XAttribute("value", kv.Value ?? string.Empty)))));

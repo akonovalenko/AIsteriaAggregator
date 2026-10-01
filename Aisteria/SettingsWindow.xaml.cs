@@ -61,26 +61,34 @@ namespace Aisteria
             BuildProviderRows(settings);
 
             // ── Ollama (local) tab ──
-            txtOllamaUrl.Text = settings.OllamaUrl;
+            txtOllamaUrl.Text = SettingsManager.GetDefaultUrl("OllamaUrl");
+            txtOllamaUrl.IsReadOnly = true;
             chkOllama.IsChecked = settings.OllamaEnabled;
-            if (!string.IsNullOrWhiteSpace(settings.OllamaModel))
+            var defaultOllamaModel = SettingsManager.GetDefaultModel("OllamaModel");
+            if (!string.IsNullOrWhiteSpace(defaultOllamaModel))
             {
-                cmbOllamaModel.Items.Add(settings.OllamaModel);
+                cmbOllamaModel.Items.Add(defaultOllamaModel);
                 cmbOllamaModel.SelectedIndex = 0;
             }
 
             // ── Generation tab ──
-            txtTemperature.Text = SettingsManager.LoadUrl("Temperature", "");
-            txtMaxTokens.Text = SettingsManager.LoadUrl("MaxTokens", "");
-            txtSystemPrompt.Text = SettingsManager.LoadUrl("SystemPrompt", "");
+            txtTemperature.Text = SettingsManager.GetDefaultUrl("Temperature");
+            txtTemperature.IsReadOnly = true;
+            txtMaxTokens.Text = SettingsManager.GetDefaultUrl("MaxTokens");
+            txtMaxTokens.IsReadOnly = true;
+            txtSystemPrompt.Text = SettingsManager.GetDefaultUrl("SystemPrompt");
+            txtSystemPrompt.IsReadOnly = true;
         }
 
         private void BuildProviderRows(Settings settings)
         {
             foreach (var d in _defs)
             {
-                // Model override applies to OpenAI-compatible providers (Gemini/Claude use their own model config).
-                if (d.ExportKey != "Gemini" && d.ExportKey != "Claude")
+                // Show the configured model for all providers that expose a model setting.
+                // Claude keeps its own dedicated UI/configuration.
+                if (d.ExportKey == "Gemini")
+                    d.ModelKey = "GeminiModel";
+                else if (d.ExportKey != "Claude")
                     d.ModelKey = d.KeyProp.Replace("Key", "Model");
 
                 var box = new GroupBox { Header = d.Label, Margin = new Thickness(0, 0, 0, 8) };
@@ -102,7 +110,7 @@ namespace Aisteria
                 var urlLabel = new TextBlock { Text = "URL", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 0), Foreground = Brushes.Gray };
                 Grid.SetRow(urlLabel, 1); Grid.SetColumn(urlLabel, 0);
 
-                d.Url = new TextBox { Text = SettingsManager.LoadUrl(d.UrlName, d.DefaultUrl) };
+                d.Url = new TextBox { Text = SettingsManager.GetDefaultUrl(d.UrlName), IsReadOnly = true };
                 Grid.SetRow(d.Url, 1); Grid.SetColumn(d.Url, 1);
 
                 grid.Children.Add(d.Chk);
@@ -115,7 +123,7 @@ namespace Aisteria
                     var modelLabel = new TextBlock { Text = "Model", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 4, 10, 0), Foreground = Brushes.Gray };
                     Grid.SetRow(modelLabel, 2); Grid.SetColumn(modelLabel, 0);
 
-                    d.Model = new TextBox { Text = SettingsManager.LoadUrl(d.ModelKey, ""), Margin = new Thickness(0, 4, 0, 0), ToolTip = "Model id — leave empty to use the built-in default" };
+                    d.Model = new TextBox { Text = LoadModelValue(d.ModelKey), IsReadOnly = true, Margin = new Thickness(0, 4, 0, 0), ToolTip = "Model is configured in App.config" };
                     Grid.SetRow(d.Model, 2); Grid.SetColumn(d.Model, 1);
 
                     grid.Children.Add(modelLabel);
@@ -143,6 +151,17 @@ namespace Aisteria
                 Sync(def);
                 def.Key.TextChanged += (s, e) => Sync(def);
             }
+        }
+
+        private static string LoadModelValue(string modelKey)
+        {
+            return modelKey switch
+            {
+                "GroqModel" => SettingsManager.LoadModel("GroqModel"),
+                "NvidiaModel" => SettingsManager.LoadModel("NvidiaModel"),
+                "GeminiModel" => SettingsManager.LoadModel("GeminiModel"),
+                _ => SettingsManager.LoadUrl(modelKey, "")
+            };
         }
 
         private static void Sync(ProviderDef d)
@@ -256,26 +275,14 @@ namespace Aisteria
             foreach (var d in _defs)
             {
                 // Always save keys — an empty value clears a previously stored key.
+                // Only API credentials are persisted. Provider settings are read from App.config.
                 SettingsManager.SaveKey(d.KeyProp, d.Key.Text);
-                SettingsManager.SaveEnabled(d.EnabledProp, d.Chk.IsChecked == true);
-                SettingsManager.SaveUrl(d.UrlName, d.Url.Text);
-                if (d.ModelKey != null)
-                    SettingsManager.SaveUrl(d.ModelKey, (d.Model.Text ?? "").Trim());
-                if (d.ModelKey != null && d.VerboseChk != null)
-                    SettingsManager.SaveEnabled(d.KeyProp.Replace("Key", "Verbose"), d.VerboseChk.IsChecked == true);
 
                 SetStr(updated, d.KeyProp, d.Key.Text);
                 SetBool(updated, d.EnabledProp, d.Chk.IsChecked == true);
             }
 
-            SettingsManager.SaveUrl("OllamaUrl", txtOllamaUrl.Text);
-            SettingsManager.SaveUrl("OllamaModel", cmbOllamaModel.Text);
-            SettingsManager.SaveEnabled("OllamaEnabled", chkOllama.IsChecked == true);
-
-            // Generation parameters (global)
-            SettingsManager.SaveUrl("Temperature", (txtTemperature.Text ?? "").Trim());
-            SettingsManager.SaveUrl("MaxTokens", (txtMaxTokens.Text ?? "").Trim());
-            SettingsManager.SaveUrl("SystemPrompt", txtSystemPrompt.Text ?? "");
+            // Ollama, provider flags and generation parameters are configured in App.config.
 
             CurrentSettings = updated;
             DialogResult = true;

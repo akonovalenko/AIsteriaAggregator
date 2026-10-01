@@ -4,7 +4,7 @@ namespace Aisteria.Providers
     {
         public override string Name => "OpenAI";
 
-        public OpenAIProvider(string baseUrl, string apiKey)
-            : base(baseUrl, "gpt-4o-mini", apiKey, visionModel: "gpt-4o") { }
+        public OpenAIProvider(string baseUrl, string apiKey, string model, string visionModel)
+            : base(baseUrl, model, apiKey, visionModel) { }
     }
 }
