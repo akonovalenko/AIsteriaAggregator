@@ -2,29 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+
 
 namespace Aisteria
 {
-    public class SessionAnswer
-    {
-        public string Name { get; set; }
-        public string Text { get; set; }
-    }
-
-    public class ChatSession
-    {
-        public string Id        { get; set; }
-        public string Title     { get; set; }
-        public string Timestamp { get; set; }
-        public string Prompt    { get; set; }
-        public string Summary   { get; set; }
-        public List<SessionAnswer> Answers { get; set; } = new List<SessionAnswer>();
-
-        [JsonIgnore]
-        public string Display => $"{Timestamp}   —   {Title}";
-    }
-
+    
     /// <summary>Saved chat sessions, persisted to %APPDATA%\Aisteria\sessions.json.</summary>
     internal static class SessionManager
     {

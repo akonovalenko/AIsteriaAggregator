@@ -133,7 +133,7 @@ namespace Aisteria
 "• Attach images by loading a file, pasting, dragging files onto the window,\r\n" +
 "  or Image → Load from URL. Several images can be attached to one request.\r\n\r\n" +
 "• Enjoying the app? Sponsoring its development is entirely optional and\r\n" +
-"  always appreciated:  https://github.com/sponsors/alexkonovalenko";
+"  always appreciated:  https://github.com/sponsors/akonovalenko";
 
             txtLicense.Text =
 "AIsteria Aggregator — License\r\n" +

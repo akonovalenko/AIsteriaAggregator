@@ -1,3 +1,4 @@
+using Aisteria.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -5,11 +6,6 @@ using System.Text.Json;
 
 namespace Aisteria
 {
-    public class PromptTemplate
-    {
-        public string Name { get; set; }
-        public string Text { get; set; }
-    }
 
     /// <summary>Saved prompt templates, persisted to %APPDATA%\Aisteria\templates.json.</summary>
     internal static class TemplateManager
