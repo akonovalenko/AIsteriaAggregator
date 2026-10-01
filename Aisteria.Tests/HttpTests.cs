@@ -1,3 +1,7 @@
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Text.Json;
 using Aisteria.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -34,11 +38,55 @@ namespace Aisteria.Tests
         [TestMethod]
         public void ErrorMessage_LongBody_IsTruncated()
         {
-            var body   = new string('x', 900);
+            var body = new string('x', 900);
             var result = Http.ErrorMessage(body, 500);
 
-            Assert.IsTrue(result.EndsWith("…"), "long body should be truncated with an ellipsis");
-            Assert.IsTrue(result.Length < 600, "truncated result should be capped near 500 chars");
+            Assert.IsTrue(result.EndsWith("…"));
+            Assert.IsTrue(result.Length < 600);
+        }
+
+        [TestMethod]
+        public void GetRetryDelay_UsesRetryAfterDelta()
+        {
+            using var response = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+            response.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.FromSeconds(7));
+
+            Assert.AreEqual(TimeSpan.FromSeconds(7), Http.GetRetryDelay(response));
+        }
+
+        [TestMethod]
+        public void GetRetryDelay_ClampsLargeDelayTo30Seconds()
+        {
+            using var response = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+            response.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.FromSeconds(60));
+
+            Assert.AreEqual(TimeSpan.FromSeconds(30), Http.GetRetryDelay(response));
+        }
+
+        [TestMethod]
+        public void GetRetryDelay_NullResponse_ReturnsNull()
+        {
+            Assert.IsNull(Http.GetRetryDelay(null));
+        }
+
+        [TestMethod]
+        public void ReadUsage_ReadsOpenAiTokenFields()
+        {
+            using var doc = JsonDocument.Parse("{\"usage\":{\"prompt_tokens\":12,\"completion_tokens\":8}}");
+            var usage = Http.ReadUsage(doc.RootElement);
+
+            Assert.AreEqual(12, usage.prompt);
+            Assert.AreEqual(8, usage.completion);
+        }
+
+        [TestMethod]
+        public void ReadUsage_MissingUsage_ReturnsNulls()
+        {
+            using var doc = JsonDocument.Parse("{\"choices\":[]}");
+            var usage = Http.ReadUsage(doc.RootElement);
+
+            Assert.IsNull(usage.prompt);
+            Assert.IsNull(usage.completion);
         }
     }
 }
