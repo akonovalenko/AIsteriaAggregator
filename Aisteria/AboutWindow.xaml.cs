@@ -13,7 +13,7 @@ namespace Aisteria
         private const string ProductName = "AIsteria Aggregator";
         private const string AuthorName  = "Alexey Konovalenko";
         private const string AuthorEmail = "aldev@ukr.net";
-        private const string SponsorUrl  = "https://github.com/sponsors/alexkonovalenko";
+        private const string SponsorUrl  = "https://github.com/sponsors/akonovalenko";
 
         public AboutWindow()
         {
